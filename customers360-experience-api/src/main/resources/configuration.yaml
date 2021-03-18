@@ -1,0 +1,22 @@
+http:
+  host: "0.0.0.0"
+  port: "8094"
+kafka:
+  bootstrap-servers: "localhost:9092"
+  producer:
+    topic: "customers-360-view"
+billing:
+  api:
+    host: "0.0.0.0"
+    port: "8091"
+    path: "/api/clients"
+crm:
+  api:
+    host: "0.0.0.0"
+    port: "8092"
+    path: "/api/accounts"
+marketing:
+  api:
+    host: "0.0.0.0"
+    port: "8093"
+    path: "/api/customers"        

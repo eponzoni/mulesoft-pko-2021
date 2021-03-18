@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:kafka="http://www.mulesoft.org/schema/mule/kafka" xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/kafka http://www.mulesoft.org/schema/mule/kafka/current/mule-kafka.xsd">
+	<sub-flow name="put-impl:\clients:application\json" doc:id="179ab841-d634-4ca0-a9bf-e0221dbc437d" >
+		<ee:transform doc:name="Transform Message (UUID if none)" doc:id="308e2e4c-9346-4988-8457-e629a32fe258" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	guid: payload.guid default uuid(),
+	firstName: payload.firstName,
+	lastName: payload.lastName,
+	emailAddress: payload.emailAddress,
+	phoneNumber: payload.phoneNumber,
+	birthDate: payload.birthDate,
+	gender: payload.gender
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name='X-Source is "KAFKA"' doc:id="15919e5c-7d83-42d3-9ba8-fdc1507f0178" >
+			<when expression='#[upper(attributes.headers."X-Source") == "KAFKA"]' >
+				<os:store doc:name="Store customer (In Memory)" doc:id="e0f9508a-8725-47d5-857e-b12b541160ed" key="#[payload.guid]" objectStore="In_Memory_Object_store" />
+				<ee:transform doc:name="Transform Message" doc:id="a7b5b141-7ffc-43dc-a2e0-1afc8dc1f685" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "customer created/updated and added to CRM's in-memory datastore"
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="http.status" ><![CDATA[%dw 2.0
+output application/java
+---
+200]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<kafka:publish doc:name="Publish to clients Topic" doc:id="83a32bec-8e9e-4caf-99ef-895da5256634" config-ref="Apache_Kafka_Producer_configuration" topic="${kafka.producer.topic}" key="#[payload.guid]" />
+				<ee:transform doc:name="Transform Message" doc:id="64ee99c0-0d08-4d3d-9285-c62130ac39ac" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "customer created/updated and published to Kafka topic"
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="httpStatus" ><![CDATA[%dw 2.0
+output application/java
+---
+201]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Logger" doc:id="9244278b-19c1-441c-825d-5b90f86f0cb1" message="#[payload]" />
+	</sub-flow>
+	<sub-flow name="get-impl:\clients:application\json" doc:id="b7420207-47c9-4465-b9b0-da1a00cb012c" >
+		<os:retrieve-all doc:name="Retrieve All clients" doc:id="c15739d9-86f4-4982-9d86-37c9981c23ad" objectStore="In_Memory_Object_store" />
+		<ee:transform doc:name="Transform Message" doc:id="450b01da-3867-4e7d-8358-19e589d25cdc" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload pluck (item, key, index) -> read(item, "application/json")]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="41b48848-2d3d-4e56-92a8-d21715f88811" />
+	</sub-flow>
+	<sub-flow name="get-impl:\clients\(id):application\json" doc:id="7f52476b-26a8-4893-a46b-cc2ea5bfed17" >
+		<try doc:name="Try" doc:id="2fac0d12-5c4a-40fc-baf0-d0744544d305" >
+			<os:retrieve doc:name="Get customer by GUID" doc:id="0152f940-8b99-4c6b-acf2-fe970f3c82c0" key="#[vars.id]" objectStore="In_Memory_Object_store"/>
+			<ee:transform doc:name="Transform Message" doc:id="675873bb-7888-4805-88f6-e85482c26097" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload pluck (item, key, index) -> read(item, "application/json")]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="f25f5caf-1a2c-45af-9272-e7a8fbca5c15" >
+					<set-variable value="#[404]" doc:name="HTTP Status = 404" doc:id="ee572f33-8399-42d3-9023-b393b8a46c46" variableName="httpStatus"/>
+				</on-error-continue>
+			</error-handler>
+		</try>
+	</sub-flow>	
+</mule>

@@ -1,0 +1,9 @@
+#%RAML 1.0 DataType
+usage: Complete payload for GET request.
+
+type:
+  - !include id.raml
+  - !include customer.raml
+
+example:
+  !include ../examples/customer-info.json

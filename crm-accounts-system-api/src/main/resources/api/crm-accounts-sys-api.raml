@@ -1,0 +1,40 @@
+#%RAML 1.0
+title: CRM Accounts System API
+version: v1
+protocols: [ HTTP, HTTPS ]
+mediaType: application/json
+description: |
+  This System API will store accounts records in CRM system.
+
+resourceTypes:
+  accounts-collection: !include /resourceTypes/collection/accounts-collection.raml
+  accounts-member: !include /resourceTypes/member/accounts-member.raml
+
+uses:
+  data-types: /libraries/data-types.raml
+
+/accounts:
+  type:
+    accounts-collection: {
+        getResponseExample: !include /examples/accounts-info.json, 
+        getResponseType: data-types.accounts-details,
+        errorResponseType: null,
+        errorResponseExample: null,
+        putRequestExample: !include /examples/account-by-id.json,
+        putRequestType: data-types.account-details-only,
+        locationHeaderExample: null,
+        putResponseExample: null, 
+        putResponseType: data-types.id-only
+      }
+  get:
+  put:
+  
+  /{id}:
+    type:
+      accounts-member:  {
+        getResponseExample: !include /examples/account-info.json, 
+        getResponseType: data-types.account-details,
+        errorResponseType: null,
+        errorResponseExample: null
+      }
+    get:

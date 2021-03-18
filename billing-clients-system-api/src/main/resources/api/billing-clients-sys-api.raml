@@ -1,0 +1,40 @@
+#%RAML 1.0
+title: MArketing clients System API
+version: v1
+protocols: [ HTTP, HTTPS ]
+mediaType: application/json
+description: |
+  This System API will store clients records in Marketing system.
+
+resourceTypes:
+  clients-collection: !include /resourceTypes/collection/clients-collection.raml
+  clients-member: !include /resourceTypes/member/clients-member.raml
+
+uses:
+  data-types: /libraries/data-types.raml
+
+/clients:
+  type:
+    clients-collection: {
+        getResponseExample: !include /examples/clients-info.json, 
+        getResponseType: data-types.clients-details,
+        errorResponseType: null,
+        errorResponseExample: null,
+        putRequestExample: !include /examples/client-by-id.json,
+        putRequestType: data-types.client-details-only,
+        locationHeaderExample: null,
+        putResponseExample: null, 
+        putResponseType: data-types.id-only
+      }
+  get:
+  put:
+  
+  /{id}:
+    type:
+      clients-member:  {
+        getResponseExample: !include /examples/client-info.json, 
+        getResponseType: data-types.client-details,
+        errorResponseType: null,
+        errorResponseExample: null
+      }
+    get:

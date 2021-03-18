@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:kafka="http://www.mulesoft.org/schema/mule/kafka" xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd http://www.mulesoft.org/schema/mule/kafka http://www.mulesoft.org/schema/mule/kafka/current/mule-kafka.xsd">
+	<http:listener-config name="billing-clients-sys-api-httpListenerConfig">
+		<http:listener-connection host="${http.host}" port="${http.port}" />
+	</http:listener-config>
+    <os:config name="ObjectStore_Config" doc:name="ObjectStore Config" doc:id="054699a4-d9f0-4083-a2c2-9fba6f7aee21" />
+    <os:object-store name="In_Memory_Object_store" doc:name="Object store" doc:id="40d003b4-4ef2-4876-a41a-8bfcfdda90d3" config-ref="ObjectStore_Config" />
+    <kafka:producer-config name="Apache_Kafka_Producer_configuration" doc:name="Apache Kafka Producer configuration" doc:id="4d52dbe7-7710-4aca-9a36-13c6dcc37570">
+        <kafka:producer-plaintext-connection>
+            <kafka:bootstrap-servers>
+                <kafka:bootstrap-server value="${kafka.bootstrap-servers}" />
+            </kafka:bootstrap-servers>
+        </kafka:producer-plaintext-connection>
+    </kafka:producer-config>
+    <configuration-properties doc:name="Configuration properties" doc:id="f8f954e4-01c2-4a7f-b599-20bdc301393e" file="configuration.yaml" />
+</mule>

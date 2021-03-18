@@ -1,0 +1,39 @@
+#%RAML 1.0
+title: Customers 360° View Experience API
+version: v1
+protocols: [ HTTP, HTTPS ]
+mediaType: application/json
+description: |
+  This Experience API will store and surface a 360 degrees view of customers across all the different systems (CRM, Billing, Marketing, etc.).
+
+resourceTypes:
+  customers-collection: !include /resourceTypes/collection/customers-collection.raml
+  customers-member: !include /resourceTypes/member/customers-member.raml
+
+uses:
+  data-types: /libraries/data-types.raml
+
+/customers:
+  type:
+    customers-collection: {
+        getResponseExample: !include /examples/customers-info.json, 
+        getResponseType: data-types.customers-details,
+        errorResponseType: null,
+        errorResponseExample: null,
+        putRequestExample: !include /examples/customer-by-id.json,
+        putRequestType: data-types.customer-details-only,
+        locationHeaderExample: null,
+        putResponseExample: null, 
+        putResponseType: data-types.id-only
+      }
+  get:
+  
+  /{id}:
+    type:
+      customers-member:  {
+        getResponseExample: !include /examples/customer-info.json, 
+        getResponseType: data-types.customer-details,
+        errorResponseType: null,
+        errorResponseExample: null
+      }
+    get:

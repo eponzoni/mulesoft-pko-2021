@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:kafka="http://www.mulesoft.org/schema/mule/kafka"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/kafka http://www.mulesoft.org/schema/mule/kafka/current/mule-kafka.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow name="get-impl:\customers:customers360-exp-api-config" doc:id="7fbcc278-b75e-4493-a4d7-091905145ba2" >
+		<scatter-gather doc:name="Scatter-Gather" doc:id="5b6f7b96-b1bb-4796-8e54-6eb75b8c4c41" >
+			<route >
+				<http:request method="GET" doc:name="Billing System API GET: /clients/" doc:id="26a3eec0-211b-4537-9193-ae57bb7052f3" config-ref="Billing_HTTP_Request_configuration" path="${billing.api.path}" target="billingClients" />
+			</route>
+			<route >
+				<http:request method="GET" doc:name="CRM System API GET: /accounts/" doc:id="54066773-3c88-4b71-b2d1-e6028f259cef" config-ref="CRM_HTTP_Request_configuration" path="${crm.api.path}" target="crmAccounts" />
+			</route>
+			<route >
+				<http:request method="GET" doc:name="Marketing System API GET: /customers/" doc:id="5bc72f2d-b1b5-41f2-b741-ea5f75eebe0a" config-ref="Marketing_HTTP_Request_configuration" path="${marketing.api.path}" target="marketingCustomers" />
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="Transform Message" doc:id="935b6f34-d072-4dcf-aed6-085d1ae960b4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	billing: {
+		count: sizeOf(vars.billingClients),
+		items: vars.billingClients.clients map (value, index) -> ({
+			guid: value.guid,
+			name: value.firstName ++ " " ++ value.lastName,
+			phone: value.phoneNumber,
+			email: value.emailAddress,
+			born: value.birthDate,
+			gender: value.gender,
+			sourceSystems: ["BILLING"]
+		})
+	}, 
+	crm: {
+		count: sizeOf(vars.crmAccounts),
+		items: vars.crmAccounts.accounts map (value, index) -> ({
+			guid: value.guid,
+			name: value.firstName ++ " " ++ value.lastName,
+			phone: value.phoneNumber,
+			email: value.emailAddress,
+			born: value.birthDate,
+			gender: value.gender,
+			sourceSystems: ["CRM"]
+		})
+	},
+	marketing: {
+		count: sizeOf(vars.crmAccounts),
+		items: vars.marketingCustomers.customers map (value, index) -> ({
+			guid: value.guid,
+			name: value.firstName ++ " " ++ value.lastName,
+			phone: value.phoneNumber,
+			email: value.emailAddress,
+			born: value.birthDate,
+			gender: value.gender,
+			sourceSystems: ["MARKETING"]
+		})
+	}	
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<os:clear doc:name="In-Memory Datastore" doc:id="cc361ce1-9523-49cb-91b0-5d5f7b202aa5" objectStore="Object_store" />
+		<os:store doc:name="Customers In-Memory Datastore" doc:id="72a6dfdd-08d7-40d3-80f2-f752f1559750" key="in-memory-customers" objectStore="Object_store"/>
+	</flow>
+	<flow name="get-impl:\customers\(id):customers360-exp-api-config" doc:id="10584b81-0909-4ce9-b2e5-a10d11fe1697" >
+		<os:retrieve doc:name="Customers List from In-Memory Datastore" doc:id="b739f295-7dad-43b8-ab19-6deff13bba2b" key="in-memory-customers" objectStore="Object_store" >
+			<os:default-value ><![CDATA[#[[]]]]></os:default-value>
+		</os:retrieve>
+		<choice doc:name="Empty In-Memory Customers Datastore?" doc:id="49c09dbc-199a-493d-a8ee-7e9c1968d887" >
+			<when expression="#[isEmpty(payload)]" >
+				<flow-ref doc:name="GET: /customers Implementation" doc:id="6bcec1b0-da33-4032-9d4c-6ad517ec0959" name="get-impl:\customers:customers360-exp-api-config" />
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="cd35563b-838d-4b11-b6bb-3ef077a78614" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload pluck (item, key, index) -> read(item, "application/json")]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Transform Message" doc:id="773e80a7-67b3-446b-8ca8-1add74844c9b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
