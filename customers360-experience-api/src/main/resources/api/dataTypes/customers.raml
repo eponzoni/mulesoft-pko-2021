@@ -1,30 +1,4 @@
 #%RAML 1.0 DataType
 
-properties:
-  billing:
-    type: object
-    properties:
-      count:
-        type: number
-        required: true
-      items:
-        type: array
-        items: !include customer-by-id.raml
-  crm:
-    type: object
-    properties:
-      count:
-        type: number
-        required: true
-      items:
-        type: array
-        items: !include customer-by-id.raml
-  marketing:
-    type: object
-    properties:
-      count:
-        type: number
-        required: true
-      items:
-        type: array
-        items: !include customer-by-id.raml            
+  type: array
+  items: !include customer-by-id.raml

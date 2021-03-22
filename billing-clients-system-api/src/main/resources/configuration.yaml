@@ -4,4 +4,4 @@ http:
 kafka:
   bootstrap-servers: "localhost:9092"
   producer:
-    topic: "clients-360-view"
+    topic: "customers360view"
