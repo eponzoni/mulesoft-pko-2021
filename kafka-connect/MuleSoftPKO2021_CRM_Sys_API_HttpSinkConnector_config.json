@@ -1,0 +1,22 @@
+{
+  "name": "MuleSoftPKO2021_CRM_Sys_API_HttpSinkConnector",
+  "config": {
+    "connector.class": "io.confluent.connect.http.HttpSinkConnector",
+    "tasks.max": "1",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "topics": "customers360view",
+    "http.api.url": "http://host.docker.internal:8092/api/accounts",
+    "request.method": "put",
+    "headers": "X-Source:Kafka|Content-Type:application/json",
+    "reporter.result.topic.name": "success-responses",
+    "reporter.result.topic.replication.factor": "1",
+    "reporter.error.topic.name": "error-responses",
+    "reporter.error.topic.replication.factor": "1",
+    "reporter.bootstrap.servers": "broker:29092",
+    "bootstrap.servers": "broker:29092",
+    "value.format": "json",
+    "value.converter.schemas.enable": "false",
+    "schemas.enable": "false"
+  }
+}
