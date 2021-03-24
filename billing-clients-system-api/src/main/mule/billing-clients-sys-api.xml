@@ -127,6 +127,7 @@ output application/json
 		<flow-ref doc:name="GET: /clients Implementation" doc:id="d1eae155-bcd8-43bf-a916-95569cd587a7" name="get-impl:\clients:application\json"/>
     </flow>
     <flow name="get:\clients\(id):billing-clients-sys-api-config">
+		<set-variable value="#[attributes.uriParams.id]" doc:name='ID (URI Params "id")' doc:id="d312b348-ab58-4968-8ad2-2530fcaf8fe6" variableName="id" />
 		<flow-ref doc:name="GET: /clients/(id) Implementation" doc:id="9728cf47-0af9-4154-bfb7-15abb138ab92" name="get-impl:\clients\(id):application\json"/>
     </flow>
 </mule>

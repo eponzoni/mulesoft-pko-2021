@@ -50,7 +50,7 @@ var billingItems = vars.billingClients.clients map ((value, index) -> {
 						name: value.firstName ++ " " ++ value.lastName,
 						phone: value.phoneNumber,
 						email: value.emailAddress,
-						born: value.birthDate,
+						born: ((value.birthDate as Date) as String {format: "cccc, dd MMMM, y"}),
 						gender: if ((value.gender default 'M') == 'M') 'Male' else 'Female'
 					})
 					
@@ -59,7 +59,7 @@ var marketingItems = vars.marketingCustomers.customers map ((value, index) -> {
 						name: value.firstName ++ " " ++ value.lastName,
 						phone: value.phoneNumber,
 						email: value.emailAddress,
-						born: value.birthDate,
+						born: ((value.birthDate as Date) as String {format: "cccc, dd MMMM, y"}),
 						gender: if ((value.gender default 'M') == 'M') 'Male' else 'Female'
 					})
 					
@@ -68,7 +68,7 @@ var crmAccounts = vars.crmAccounts.accounts map ((value, index) -> {
 						name: value.firstName ++ " " ++ value.lastName,
 						phone: value.phoneNumber,
 						email: value.emailAddress,
-						born: value.birthDate,
+						born: ((value.birthDate as Date) as String {format: "cccc, dd MMMM, y"}),
 						gender: if ((value.gender default 'M') == 'M') 'Male' else 'Female'
 					})
 
@@ -78,15 +78,36 @@ var crmAccounts = vars.crmAccounts.accounts map ((value, index) -> {
 			</ee:message>
 		</ee:transform>
 		<os:clear doc:name="In-Memory Datastore" doc:id="cc361ce1-9523-49cb-91b0-5d5f7b202aa5" objectStore="Object_store" />
-		<os:store doc:name="Customers In-Memory Datastore" doc:id="72a6dfdd-08d7-40d3-80f2-f752f1559750" key="in-memory-customers" objectStore="Object_store"/>
+		<os:store doc:name="Customers In-Memory Datastore" doc:id="72a6dfdd-08d7-40d3-80f2-f752f1559750" key="in-memory-customers" objectStore="Object_store">
+			<os:value ><![CDATA[#[%dw 2.0
+output application/json
+---
+payload]]]></os:value>
+		</os:store>
 	</flow>
 	<flow name="get-impl:\customers\(id):customers360-exp-api-config" doc:id="10584b81-0909-4ce9-b2e5-a10d11fe1697" >
 		<os:retrieve doc:name="Customers List from In-Memory Datastore" doc:id="b739f295-7dad-43b8-ab19-6deff13bba2b" key="in-memory-customers" objectStore="Object_store" >
 			<os:default-value ><![CDATA[#[[]]]]></os:default-value>
 		</os:retrieve>
+		<ee:transform doc:name="Transform Message" doc:id="b949c34d-89d5-4ee9-90db-e08deb8f16a2" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
 		<choice doc:name="Empty In-Memory Customers Datastore?" doc:id="49c09dbc-199a-493d-a8ee-7e9c1968d887" >
 			<when expression="#[isEmpty(payload)]" >
 				<flow-ref doc:name="GET: /customers Implementation" doc:id="6bcec1b0-da33-4032-9d4c-6ad517ec0959" name="get-impl:\customers:customers360-exp-api-config" />
+				<ee:transform doc:name="Transform Message" doc:id="773e80a7-67b3-446b-8ca8-1add74844c9b">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+(payload filter (item) -> item.guid == vars.id)[0]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
 			</when>
 			<otherwise >
 				<ee:transform doc:name="Transform Message" doc:id="cd35563b-838d-4b11-b6bb-3ef077a78614" >
@@ -94,28 +115,10 @@ var crmAccounts = vars.crmAccounts.accounts map ((value, index) -> {
 						<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
 ---
-payload.billing.items map (billingValue) -> {
-	guid: billingValue.guid,
-	name: billingValue.name,
-    phone: billingValue.phone,
-    email: billingValue.email,
-    born: billingValue.born,
-    gender: billingValue.gender,	
-	sourceSystems: billingValue.sourceSystems ++ 
-				   (payload.marketing.items filter ($.guid == billingValue.guid) map (marketingValue) -> marketingValue.sourceSystems)[0] ++
-				   (payload.crm.items filter ($.guid == billingValue.guid) map (crmValue) -> crmValue.sourceSystems)[0]
-} filter ($.guid == vars.id)[0]]]></ee:set-payload>
+(payload filter (item) -> item.guid == vars.id)[0]]]></ee:set-payload>
 					</ee:message>
 				</ee:transform>
 			</otherwise>
 		</choice>
-		<ee:transform doc:name="Transform Message" doc:id="773e80a7-67b3-446b-8ca8-1add74844c9b" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
-output application/json
----
-payload filter (customer) -> customer.guid == vars.guid]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
 	</flow>
 </mule>

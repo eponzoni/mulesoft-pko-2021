@@ -32,7 +32,7 @@ output application/json
 output application/json
 ---
 {
-	message: "customer created/updated and added to CRM's in-memory datastore"
+	message: "Client created/updated and added to Billing's in-memory datastore"
 }]]></ee:set-payload>
 					</ee:message>
 					<ee:variables >
@@ -76,7 +76,6 @@ output application/json
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<logger level="INFO" doc:name="Logger" doc:id="41b48848-2d3d-4e56-92a8-d21715f88811" />
 	</sub-flow>
 	<sub-flow name="get-impl:\clients\(id):application\json" doc:id="7f52476b-26a8-4893-a46b-cc2ea5bfed17" >
 		<try doc:name="Try" doc:id="2fac0d12-5c4a-40fc-baf0-d0744544d305" >
